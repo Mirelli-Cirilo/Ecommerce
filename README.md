@@ -1,7 +1,7 @@
 # Ecommerce
-A ideia do projeto é ser um Ecommerce voltado para área farmacêutica, onde o cliente põe os items no carrinho, finaliza o pedido tendo opção de receber em casa ou pegar na loja
+A ideia do projeto é ser um Ecommerce voltado para área farmacêutica, onde o cliente põe os items no carrinho, finaliza o pedido tendo opção de receber em casa ou pegar na loja.
 
-Tecnologias: Python, Django, Js, Html, Css
+Tecnologias: Python, Django, Js, Html, Css.
 
 # PARA CLONAR O REPOSITÓRIO:
 
