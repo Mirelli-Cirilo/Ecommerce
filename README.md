@@ -23,3 +23,10 @@ ative seu ambiente virtual
 
 instale os 'requirements' 
 
+```pip install -r requirements.txt```
+
+pra rodar a app use 
+
+```python manage.py runserver```
+
+
