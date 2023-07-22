@@ -24,7 +24,16 @@ class Product(models.Model):
         except:
             url = ''
         return url    
-        
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'price': self.price,
+            'imageURL': self.imageURL,
+        }
+
+
 class Order(models.Model):
     customer = models.ForeignKey(Customer, null=True, blank=True, on_delete=models.SET_NULL)
     order_date = models.DateTimeField(auto_now_add=True)
