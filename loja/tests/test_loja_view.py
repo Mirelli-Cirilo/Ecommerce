@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.shortcuts import reverse
 from django.db.models import QuerySet
-from .models import Product
+from loja.models import Product
 
 
 class LojaTemplateViewTestCaseUtils:

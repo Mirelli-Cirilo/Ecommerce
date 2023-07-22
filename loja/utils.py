@@ -1,13 +1,14 @@
 import json
 from .models import *
 
+
 def cookieCark(request):
-    try:
-        cart = json.loads(request.COOKIES['cart'])
-    except:
-            cart = {}
-    print('cart:', cart)         
-    order = {'get_total_cart': 0, 'get_total_items':0}
+    cart = request.COOKIES.get('cart', {})
+
+    if cart != {}: 
+        cart = json.loads(cart)
+
+    order = {'get_total_cart':0, 'get_total_items':0}
     items = []
     cartItems = order['get_total_items']
 
@@ -17,38 +18,21 @@ def cookieCark(request):
 
             product = Product.objects.get(id=i)
             total = product.price * cart[i]["quantity"]
-
+            
             order['get_total_cart'] += total
             order['get_total_items'] += cart[i]["quantity"]
 
-            item = {
-                'product':{
-                'id': product.id,
-                'name': product.name,
-                'price': product.price,
-                'imageURL': product.imageURL,
-                },
+            items.append({
+                'product':product.to_dict(),
                 'quantity':cart[i]["quantity"],
                 'get_total':total
-            }
-            items.append(item)
+            })
+
         except:
             pass
-    return {'items': items, 'order': order, 'cartItems':cartItems}
 
-def cartData(request):
-    if request.user.is_authenticated:
-        customer = request.user.customer
-        order, created = Order.objects.get_or_create(customer=customer, complete=False)
-        items = order.orderitem_set.all()
-        cartItems = order.get_total_items
-    else:
-        cookieData = cookieCark(request)
-        cartItems = cookieData['cartItems']
-        order = cookieData['order']
-        items = cookieData['items']
+    return {'items':items, 'order':order, 'cartItems':cartItems}
 
-    return {'items': items, 'order': order, 'cartItems':cartItems}    
 
 def guestOrder(request, data):
     print('User is not logged in')   
@@ -59,7 +43,7 @@ def guestOrder(request, data):
     cookieData = cookieCark(request)
     items = cookieData['items']
 
-    customer, created = Customer.objects.get_or_create(email=email)
+    customer = Customer.objects.get_or_create(email=email)[0]
     customer.name = name
     customer.save()
 
@@ -68,9 +52,25 @@ def guestOrder(request, data):
     for item in items:
         product = Product.objects.get(id=item['product']['id'])
 
-        orderItem = OrderItem.objects.create(
+        OrderItem.objects.create(
             product=product,
             order=order,
             quantity=item['quantity']
         )
     return customer, order
+
+
+class TemplateViewUtils:
+    def get_data(self):
+        user = self.request.user
+
+        if user.is_authenticated:
+            data = dict()
+            kwargs = {'customer':user.customer, 'complete':False}
+            data['order'] = Order.objects.get_or_create(**kwargs)[0]
+            data['items'] = data['order'].orderitem_set.all()
+            data['cartItems'] = data['order'].get_total_items
+            return data
+
+        return cookieCark(self.request)
+
