@@ -1,22 +1,41 @@
-from django.shortcuts import render
-from .models import *
-from django.http import JsonResponse
-from .utils import cartData, guestOrder
 import json
 import datetime
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.generic import TemplateView
+from .models import *
+from . import utils 
 
-def loja(request):
 
-    data = cartData(request)
-    cartItems = data['cartItems']
+class LojaTemplateView(TemplateView):
+    """
+    This view return all products available
+    """
+    template_name = 'loja/Loja.html'
 
-    products = Product.objects.all()
-    context = {'products': products, 'cartItems': cartItems}
-    return render(request, 'loja/Loja.html', context)
+    def _get_cart_items(self):
+        """
+        Return cart items to be used in the view context
+        """
+        user = self.request.user
+        if user.is_authenticated:
+            kwargs = {'customer': user.customer, 'complete':False}
+            return (
+                Order.objects.get_or_create(**kwargs)[0]
+                .get_total_items()
+            )
+        return utils.cookieCark(self.request).get('cartItems')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['products'] = Product.objects.all()
+        context['cartItems'] = self._get_cart_items()
+        return context
+
 
 def carrinho(request):
 
-    data = cartData(request)
+    data = utils.cartData(request)
     cartItems = data['cartItems']
     order = data['order']
     items = data['items']
@@ -26,7 +45,7 @@ def carrinho(request):
 
 def checkout(request):
 
-    data = cartData(request)
+    data = utils.cartData(request)
     cartItems = data['cartItems']
     order = data['order']
     items = data['items']
@@ -67,7 +86,7 @@ def processOrder(request):
 		customer = request.user.customer
 		order, created = Order.objects.get_or_create(customer=customer, complete=False)
 	else:
-		customer, order = guestOrder(request, data)
+		customer, order = utils.guestOrder(request, data)
 
 	total = float(data['form']['total'])
 	order.transaction_id = transaction_id
@@ -87,3 +106,4 @@ def processOrder(request):
 		)
 
 	return JsonResponse('Payment submitted..', safe=False) 
+
